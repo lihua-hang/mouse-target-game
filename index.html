@@ -72,11 +72,27 @@
     <div class="container">
         <h1>各种各样的小程序</h1>
         <ul class="program-list">
+            {% for program in programs %}
             <li class="program-item">
-                <div class="program-name">mouse_target.py</div>
-                <div class="program-path">1/mouse_target.py</div>
-                <div class="program-description">鼠标定位游戏</div>
-                <a href="templates/mouse_target.html" class="play-button">开始游戏</a>
+                <div class="program-name">{{ program.name }}</div>
+                <div class="program-path">{{ program.path }}</div>
+                <div class="program-description">{{ program.description }}</div>
+                {% if program.name == 'mouse_target.py' %}
+                <a href="/play/mouse_target" class="play-button">开始游戏</a>
+                {% endif %}
+            </li>
+            {% endfor %}
+            <li class="program-item">
+                <div class="program-name">piano.html</div>
+                <div class="program-path">mouse-target-game/templates/piano.html</div>
+                <div class="program-description">在线钢琴程序</div>
+                <a href="/play/piano" class="play-button">打开钢琴</a>
+            </li>
+            <li class="program-item">
+                <div class="program-name">fps_game.html</div>
+                <div class="program-path">mouse-target-game/templates/fps_game.html</div>
+                <div class="program-description">3D第一人称射击游戏</div>
+                <a href="/play/fps_game" class="play-button">开始游戏</a>
             </li>
         </ul>
     </div>
