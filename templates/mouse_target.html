@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>鼠标定位游戏</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: white;
+        }
+        canvas {
+            display: block;
+        }
+        .stats {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-family: Arial, sans-serif;
+            font-size: 18px;
+            font-weight: bold;
+            color: black;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .back-button {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            font-family: Arial, sans-serif;
+            font-size: 16px;
+            color: white;
+            background-color: #4CAF50;
+            padding: 8px 16px;
+            border-radius: 4px;
+            text-decoration: none;
+        }
+        .back-button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <a href="/" class="back-button">返回</a>
+    <div class="stats">
+        <div>击破数: <span id="score">0</span></div>
+        <div>命中率: <span id="accuracy">0.0</span>%</div>
+    </div>
+    <canvas id="gameCanvas"></canvas>
+
+    <script>
+        // 获取画布和上下文
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // 设置画布大小
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        // 小球属性
+        const ballRadius = 75;
+        let balls = [];
+
+        // 游戏统计
+        let score = 0;
+        let clicks = 0;
+
+        // 颜色
+        const colors = ['#ff0000', '#00ff00', '#0000ff'];
+
+        // 生成小球
+        function generateBall() {
+            const maxAttempts = 100;
+            for (let i = 0; i < maxAttempts; i++) {
+                const x = Math.random() * (canvas.width - 2 * ballRadius) + ballRadius;
+                const y = Math.random() * (canvas.height - 2 * ballRadius) + ballRadius;
+                
+                // 检查是否与其他小球重叠
+                let overlap = false;
+                for (const ball of balls) {
+                    const dx = x - ball.x;
+                    const dy = y - ball.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    if (distance < 2 * ballRadius) {
+                        overlap = true;
+                        break;
+                    }
+                }
+                
+                if (!overlap) {
+                    const color = colors[Math.floor(Math.random() * colors.length)];
+                    return { x, y, color };
+                }
+            }
+            
+            // 如果多次尝试后仍无法找到合适位置，返回一个默认位置
+            return {
+                x: canvas.width / 2,
+                y: canvas.height / 2,
+                color: colors[Math.floor(Math.random() * colors.length)]
+            };
+        }
+
+        // 初始化小球
+        for (let i = 0; i < 3; i++) {
+            balls.push(generateBall());
+        }
+
+        // 绘制小球
+        function drawBalls() {
+            for (const ball of balls) {
+                ctx.beginPath();
+                ctx.arc(ball.x, ball.y, ballRadius, 0, Math.PI * 2);
+                ctx.fillStyle = ball.color;
+                ctx.fill();
+                ctx.closePath();
+            }
+        }
+
+        // 更新统计信息
+        function updateStats() {
+            const accuracy = clicks === 0 ? 0 : (score / clicks) * 100;
+            document.getElementById('score').textContent = score;
+            document.getElementById('accuracy').textContent = accuracy.toFixed(1);
+        }
+
+        // 游戏主循环
+        function gameLoop() {
+            // 清空画布
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // 绘制小球
+            drawBalls();
+            
+            // 更新统计信息
+            updateStats();
+            
+            requestAnimationFrame(gameLoop);
+        }
+
+        // 处理点击事件
+        canvas.addEventListener('click', function(e) {
+            clicks++;
+            const rect = canvas.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
+            
+            // 检查是否点击到小球
+            for (let i = 0; i < balls.length; i++) {
+                const ball = balls[i];
+                const dx = mouseX - ball.x;
+                const dy = mouseY - ball.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                
+                if (distance <= ballRadius) {
+                    score++;
+                    balls[i] = generateBall();
+                    break;
+                }
+            }
+        });
+
+        // 启动游戏
+        gameLoop();
+    </script>
+</body>
+</html>

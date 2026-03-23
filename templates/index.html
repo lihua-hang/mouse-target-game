@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>各种各样的小程序</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .program-list {
+            list-style: none;
+            padding: 0;
+        }
+        .program-item {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .program-item:last-child {
+            border-bottom: none;
+        }
+        .program-name {
+            font-weight: bold;
+            font-size: 18px;
+        }
+        .program-path {
+            color: #666;
+            font-size: 14px;
+        }
+        .program-description {
+            color: #888;
+            font-size: 14px;
+        }
+        a {
+            color: #0066cc;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        .play-button {
+            display: inline-block;
+            background-color: #4CAF50;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 4px;
+            text-decoration: none;
+            margin-top: 5px;
+        }
+        .play-button:hover {
+            background-color: #45a049;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>各种各样的小程序</h1>
+        <ul class="program-list">
+            {% for program in programs %}
+            <li class="program-item">
+                <div class="program-name">{{ program.name }}</div>
+                <div class="program-path">{{ program.path }}</div>
+                <div class="program-description">{{ program.description }}</div>
+                {% if program.name == 'mouse_target.py' %}
+                <a href="/play/mouse_target" class="play-button">开始游戏</a>
+                {% endif %}
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+</body>
+</html>
