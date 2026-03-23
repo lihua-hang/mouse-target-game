@@ -36,5 +36,9 @@ def play_mouse_target():
 def play_piano():
     return render_template('piano.html')
 
+@app.route('/play/fps_game')
+def play_fps_game():
+    return render_template('fps_game.html')
+
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
