@@ -21,8 +21,7 @@ def get_programs():
 
 @app.route('/')
 def index():
-    programs = get_programs()
-    return render_template('index.html', programs=programs)
+    return send_file('index.html')
 
 @app.route('/program/<path:program_path>')
 def program(program_path):
