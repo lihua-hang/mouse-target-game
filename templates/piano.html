@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>在线钢琴</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+            font-family: Arial, sans-serif;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .piano {
+            display: flex;
+            padding: 20px;
+            background-color: #333;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        .key {
+            width: 60px;
+            height: 200px;
+            margin: 0 2px;
+            border-radius: 0 0 5px 5px;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.1s ease;
+        }
+        .white {
+            background-color: white;
+            z-index: 1;
+        }
+        .white:hover {
+            background-color: #f0f0f0;
+        }
+        .white.active {
+            background-color: #e0e0e0;
+            transform: translateY(2px);
+        }
+        .black {
+            background-color: black;
+            width: 40px;
+            height: 120px;
+            margin: 0 -20px;
+            z-index: 2;
+        }
+        .black:hover {
+            background-color: #333;
+        }
+        .black.active {
+            background-color: #555;
+            transform: translateY(2px);
+        }
+    </style>
+</head>
+<body>
+    <h1>在线钢琴</h1>
+    <div class="piano">
+        <!-- 白键 -->
+        <div class="key white" data-note="C4"></div>
+        <div class="key white" data-note="D4"></div>
+        <div class="key white" data-note="E4"></div>
+        <div class="key white" data-note="F4"></div>
+        <div class="key white" data-note="G4"></div>
+        <div class="key white" data-note="A4"></div>
+        <div class="key white" data-note="B4"></div>
+        <div class="key white" data-note="C5"></div>
+        
+        <!-- 黑键 -->
+        <div class="key black" data-note="C#4" style="left: 40px;"></div>
+        <div class="key black" data-note="D#4" style="left: 104px;"></div>
+        <div class="key black" data-note="F#4" style="left: 232px;"></div>
+        <div class="key black" data-note="G#4" style="left: 296px;"></div>
+        <div class="key black" data-note="A#4" style="left: 360px;"></div>
+    </div>
+    
+    <script>
+        // 创建音频上下文
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        
+        // 钢琴键频率映射
+        const noteFrequencies = {
+            'C4': 261.63,
+            'C#4': 277.18,
+            'D4': 293.66,
+            'D#4': 311.13,
+            'E4': 329.63,
+            'F4': 349.23,
+            'F#4': 369.99,
+            'G4': 392.00,
+            'G#4': 415.30,
+            'A4': 440.00,
+            'A#4': 466.16,
+            'B4': 493.88,
+            'C5': 523.25
+        };
+        
+        // 播放音符的函数
+        function playNote(note) {
+            const frequency = noteFrequencies[note];
+            if (!frequency) return;
+            
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.type = 'sine';
+            oscillator.frequency.value = frequency;
+            
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 1);
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 1);
+        }
+        
+        // 获取所有钢琴键
+        const keys = document.querySelectorAll('.key');
+        
+        // 为每个键添加点击事件
+        keys.forEach(key => {
+            key.addEventListener('mousedown', () => {
+                key.classList.add('active');
+                const note = key.getAttribute('data-note');
+                playNote(note);
+            });
+            
+            key.addEventListener('mouseup', () => {
+                key.classList.remove('active');
+            });
+            
+            key.addEventListener('mouseleave', () => {
+                key.classList.remove('active');
+            });
+        });
+        
+        // 键盘支持
+        document.addEventListener('keydown', (e) => {
+            const keyMap = {
+                'a': 'C4',
+                'w': 'C#4',
+                's': 'D4',
+                'e': 'D#4',
+                'd': 'E4',
+                'f': 'F4',
+                't': 'F#4',
+                'g': 'G4',
+                'y': 'G#4',
+                'h': 'A4',
+                'u': 'A#4',
+                'j': 'B4',
+                'k': 'C5'
+            };
+            
+            const note = keyMap[e.key.toLowerCase()];
+            if (note) {
+                e.preventDefault();
+                const keyElement = document.querySelector(`[data-note="${note}"]`);
+                if (keyElement && !keyElement.classList.contains('active')) {
+                    keyElement.classList.add('active');
+                    playNote(note);
+                }
+            }
+        });
+        
+        document.addEventListener('keyup', (e) => {
+            const keyMap = {
+                'a': 'C4',
+                'w': 'C#4',
+                's': 'D4',
+                'e': 'D#4',
+                'd': 'E4',
+                'f': 'F4',
+                't': 'F#4',
+                'g': 'G4',
+                'y': 'G#4',
+                'h': 'A4',
+                'u': 'A#4',
+                'j': 'B4',
+                'k': 'C5'
+            };
+            
+            const note = keyMap[e.key.toLowerCase()];
+            if (note) {
+                e.preventDefault();
+                const keyElement = document.querySelector(`[data-note="${note}"]`);
+                if (keyElement) {
+                    keyElement.classList.remove('active');
+                }
+            }
+        });
+    </script>
+</body>
+</html>

@@ -32,5 +32,9 @@ def program(program_path):
 def play_mouse_target():
     return render_template('mouse_target.html')
 
+@app.route('/play/piano')
+def play_piano():
+    return render_template('piano.html')
+
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
