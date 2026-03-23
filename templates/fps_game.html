@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D第一人称射击游戏</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #000;
+            font-family: Arial, sans-serif;
+        }
+        canvas {
+            display: block;
+        }
+        .stats {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            font-size: 14px;
+            font-weight: bold;
+            color: white;
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .controls {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 20px;
+        }
+        .control-btn {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.3);
+            border: 2px solid white;
+            color: white;
+            font-size: 20px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            user-select: none;
+        }
+        .control-btn:hover {
+            background-color: rgba(255, 255, 255, 0.5);
+        }
+        .control-btn:active {
+            background-color: rgba(255, 255, 255, 0.7);
+        }
+        .fire-btn {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background-color: rgba(255, 0, 0, 0.5);
+            border: 2px solid red;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            user-select: none;
+        }
+        .fire-btn:hover {
+            background-color: rgba(255, 0, 0, 0.7);
+        }
+        .fire-btn:active {
+            background-color: rgba(255, 0, 0, 0.9);
+        }
+        .back-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 16px;
+            color: white;
+            background-color: rgba(255, 255, 255, 0.3);
+            padding: 8px 16px;
+            border-radius: 4px;
+            text-decoration: none;
+        }
+        .back-button:hover {
+            background-color: rgba(255, 255, 255, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <a href="/" class="back-button">返回</a>
+    <div class="stats">
+        <div>分数: <span id="score">0</span></div>
+        <div>生命值: <span id="health">100</span></div>
+    </div>
+    <canvas id="gameCanvas"></canvas>
+    <div class="controls">
+        <div class="control-btn" id="btn-up">↑</div>
+        <div class="control-btn" id="btn-left">←</div>
+        <div class="control-btn" id="btn-down">↓</div>
+        <div class="control-btn" id="btn-right">→</div>
+    </div>
+    <div class="fire-btn" id="btn-fire">开火</div>
+
+    <script>
+        // 获取画布和上下文
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // 设置画布大小
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        // 游戏状态
+        let score = 0;
+        let health = 100;
+        
+        // 玩家状态
+        const player = {
+            x: 0,
+            y: 0,
+            z: 0,
+            rotation: 0,
+            speed: 0.1
+        };
+
+        // 敌人
+        const enemies = [];
+        const enemyCount = 5;
+
+        // 子弹
+        const bullets = [];
+
+        // 控制状态
+        const keys = {
+            up: false,
+            down: false,
+            left: false,
+            right: false,
+            fire: false
+        };
+
+        // 初始化敌人
+        function initEnemies() {
+            for (let i = 0; i < enemyCount; i++) {
+                enemies.push({
+                    x: (Math.random() - 0.5) * 20,
+                    y: 0,
+                    z: Math.random() * 10 + 5,
+                    health: 100,
+                    speed: 0.02 + Math.random() * 0.03
+                });
+            }
+        }
+
+        // 初始化游戏
+        function initGame() {
+            initEnemies();
+        }
+
+        // 渲染游戏
+        function render() {
+            // 清空画布
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // 渲染3D场景
+            render3D();
+
+            // 渲染UI
+            renderUI();
+
+            requestAnimationFrame(render);
+        }
+
+        // 渲染3D场景
+        function render3D() {
+            // 简单的3D渲染（射线追踪简化版）
+            const screenWidth = canvas.width;
+            const screenHeight = canvas.height;
+            const fov = Math.PI / 3;
+            const depth = 20;
+
+            for (let x = 0; x < screenWidth; x++) {
+                const rayAngle = (player.rotation - fov / 2) + (x / screenWidth) * fov;
+                
+                // 渲染地面
+                const floorDistance = screenHeight / 2 / Math.tan(rayAngle);
+                const floorY = screenHeight / 2 + floorDistance * 0.5;
+                
+                ctx.fillStyle = '#333';
+                ctx.fillRect(x, floorY, 1, screenHeight - floorY);
+
+                // 渲染天空
+                ctx.fillStyle = '#111';
+                ctx.fillRect(x, 0, 1, floorY);
+            }
+
+            // 渲染敌人
+            enemies.forEach(enemy => {
+                const dx = enemy.x - player.x;
+                const dz = enemy.z - player.z;
+                const distance = Math.sqrt(dx * dx + dz * dz);
+                
+                if (distance < depth) {
+                    const angle = Math.atan2(dx, dz);
+                    const relativeAngle = angle - player.rotation;
+                    
+                    const screenX = (0.5 + relativeAngle / fov) * screenWidth;
+                    const size = (1 / distance) * 300;
+                    const screenY = screenHeight / 2 - size / 2;
+                    
+                    // 绘制敌人
+                    ctx.fillStyle = '#f00';
+                    ctx.fillRect(screenX - size / 2, screenY, size, size);
+                }
+            });
+
+            // 渲染子弹
+            bullets.forEach(bullet => {
+                const dx = bullet.x - player.x;
+                const dz = bullet.z - player.z;
+                const distance = Math.sqrt(dx * dx + dz * dz);
+                
+                if (distance < depth) {
+                    const angle = Math.atan2(dx, dz);
+                    const relativeAngle = angle - player.rotation;
+                    
+                    const screenX = (0.5 + relativeAngle / fov) * screenWidth;
+                    const size = (1 / distance) * 50;
+                    const screenY = screenHeight / 2 - size / 2;
+                    
+                    // 绘制子弹
+                    ctx.fillStyle = '#fff';
+                    ctx.fillRect(screenX - size / 2, screenY, size, size);
+                }
+            });
+        }
+
+        // 渲染UI
+        function renderUI() {
+            document.getElementById('score').textContent = score;
+            document.getElementById('health').textContent = health;
+        }
+
+        // 更新游戏
+        function update() {
+            // 移动玩家
+            if (keys.up) {
+                player.x += Math.sin(player.rotation) * player.speed;
+                player.z += Math.cos(player.rotation) * player.speed;
+            }
+            if (keys.down) {
+                player.x -= Math.sin(player.rotation) * player.speed;
+                player.z -= Math.cos(player.rotation) * player.speed;
+            }
+            if (keys.left) {
+                player.rotation -= 0.05;
+            }
+            if (keys.right) {
+                player.rotation += 0.05;
+            }
+
+            // 发射子弹
+            if (keys.fire) {
+                bullets.push({
+                    x: player.x,
+                    y: player.y,
+                    z: player.z,
+                    dx: Math.sin(player.rotation) * 0.3,
+                    dz: Math.cos(player.rotation) * 0.3,
+                    life: 100
+                });
+                keys.fire = false;
+            }
+
+            // 更新子弹
+            bullets.forEach((bullet, index) => {
+                bullet.x += bullet.dx;
+                bullet.z += bullet.dz;
+                bullet.life--;
+
+                if (bullet.life <= 0) {
+                    bullets.splice(index, 1);
+                }
+
+                // 检测子弹碰撞
+                enemies.forEach((enemy, enemyIndex) => {
+                    const dx = enemy.x - bullet.x;
+                    const dz = enemy.z - bullet.z;
+                    const distance = Math.sqrt(dx * dx + dz * dz);
+
+                    if (distance < 0.5) {
+                        enemy.health -= 25;
+                        bullets.splice(index, 1);
+
+                        if (enemy.health <= 0) {
+                            score += 10;
+                            enemies.splice(enemyIndex, 1);
+                            // 生成新敌人
+                            enemies.push({
+                                x: (Math.random() - 0.5) * 20,
+                                y: 0,
+                                z: Math.random() * 10 + 5,
+                                health: 100,
+                                speed: 0.02 + Math.random() * 0.03
+                            });
+                        }
+                    }
+                });
+            });
+
+            // 更新敌人
+            enemies.forEach(enemy => {
+                const dx = player.x - enemy.x;
+                const dz = player.z - enemy.z;
+                const distance = Math.sqrt(dx * dx + dz * dz);
+
+                if (distance > 1) {
+                    enemy.x += (dx / distance) * enemy.speed;
+                    enemy.z += (dz / distance) * enemy.speed;
+                } else {
+                    // 敌人攻击玩家
+                    health -= 5;
+                    if (health <= 0) {
+                        // 游戏结束
+                        alert('游戏结束！分数：' + score);
+                        health = 100;
+                        score = 0;
+                        enemies.length = 0;
+                        initEnemies();
+                    }
+                }
+            });
+
+            setTimeout(update, 16);
+        }
+
+        // 处理键盘输入
+        window.addEventListener('keydown', (e) => {
+            switch (e.key) {
+                case 'w':
+                case 'ArrowUp':
+                    keys.up = true;
+                    break;
+                case 's':
+                case 'ArrowDown':
+                    keys.down = true;
+                    break;
+                case 'a':
+                case 'ArrowLeft':
+                    keys.left = true;
+                    break;
+                case 'd':
+                case 'ArrowRight':
+                    keys.right = true;
+                    break;
+                case ' ': 
+                    keys.fire = true;
+                    break;
+            }
+        });
+
+        window.addEventListener('keyup', (e) => {
+            switch (e.key) {
+                case 'w':
+                case 'ArrowUp':
+                    keys.up = false;
+                    break;
+                case 's':
+                case 'ArrowDown':
+                    keys.down = false;
+                    break;
+                case 'a':
+                case 'ArrowLeft':
+                    keys.left = false;
+                    break;
+                case 'd':
+                case 'ArrowRight':
+                    keys.right = false;
+                    break;
+            }
+        });
+
+        // 处理触摸控制
+        document.getElementById('btn-up').addEventListener('mousedown', () => keys.up = true);
+        document.getElementById('btn-up').addEventListener('mouseup', () => keys.up = false);
+        document.getElementById('btn-down').addEventListener('mousedown', () => keys.down = true);
+        document.getElementById('btn-down').addEventListener('mouseup', () => keys.down = false);
+        document.getElementById('btn-left').addEventListener('mousedown', () => keys.left = true);
+        document.getElementById('btn-left').addEventListener('mouseup', () => keys.left = false);
+        document.getElementById('btn-right').addEventListener('mousedown', () => keys.right = true);
+        document.getElementById('btn-right').addEventListener('mouseup', () => keys.right = false);
+        document.getElementById('btn-fire').addEventListener('mousedown', () => keys.fire = true);
+
+        // 初始化游戏
+        initGame();
+
+        // 开始游戏循环
+        render();
+        update();
+    </script>
+</body>
+</html>
